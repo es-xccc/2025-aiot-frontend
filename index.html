@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>資料顯示</title>
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch('/data');
+                const data = await response.text();
+                document.getElementById('output').innerText = data;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('output').innerText = '無法取得資料';
+            }
+        }
+
+        // 每隔 10 秒更新資料
+        setInterval(fetchData, 10000);
+
+        // 初始化時立即載入資料
+        window.onload = fetchData;
+    </script>
+</head>
+<body>
+    <h1>資料顯示</h1>
+    <pre id="output">載入中...</pre>
+</body>
+</html>
