@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 定義 API 端點
+// 修改 /data API 端點，若 SSH 連線失敗則改為讀取本地 output.csv
 app.get('/data', (req, res) => {
   const conn = new Client();
 
@@ -54,7 +54,41 @@ app.get('/data', (req, res) => {
   }).connect(sshConfig);
 
   conn.on('error', (err) => {
-    res.status(500).send('SSH 連接失敗');
+    console.error('SSH 連接失敗，改為讀取本地檔案:', err);
+    const localFilePath = './output.csv';
+
+    fs.readFile(localFilePath, 'utf8', (err, data) => {
+      if (err) {
+        res.status(500).send('本地檔案讀取失敗');
+        return;
+      }
+
+      res.send(data);
+    });
+  });
+});
+
+// 在 /data API 中過濾最後 5 秒的資料
+app.get('/filtered-data', (req, res) => {
+  const localFilePath = './output.csv';
+
+  fs.readFile(localFilePath, 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('本地檔案讀取失敗');
+      return;
+    }
+
+    const lines = data.trim().split('\n');
+    const lastTimestamp = parseFloat(lines[lines.length - 1].split(',')[0]);
+    const filteredData = lines.filter(line => {
+      const timestamp = parseFloat(line.split(',')[0]);
+      return lastTimestamp - timestamp <= 5;
+    });
+
+    res.json(filteredData.map(line => {
+      const [time, name, x1, y1, x2, y2] = line.split(',');
+      return { time: parseFloat(time), name, x1: parseInt(x1), y1: parseInt(y1), x2: parseInt(x2), y2: parseInt(y2) };
+    }));
   });
 });
 

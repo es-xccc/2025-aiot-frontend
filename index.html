@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>資料顯示</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #dashboard-container {
+            width: 50%;
+            margin: 0 auto;
+        }
+        #dashboard {
+            width: 100%;
+            height: auto;
+        }
+    </style>
     <script>
         async function fetchData() {
             try {
@@ -16,15 +27,63 @@
             }
         }
 
+        async function fetchFilteredData() {
+            try {
+                const response = await fetch('/filtered-data');
+                const data = await response.json();
+
+                const canvas = document.getElementById('dashboard');
+                const ctx = canvas.getContext('2d');
+
+                const objects = data.reduce((acc, item) => {
+                    if (!acc[item.name]) acc[item.name] = [];
+                    acc[item.name].push({ x: (item.x1 + item.x2) / 2, y: (item.y1 + item.y2) / 2 });
+                    return acc;
+                }, {});
+
+                const datasets = Object.keys(objects).map(name => ({
+                    label: name,
+                    data: objects[name],
+                    borderColor: getRandomColor(),
+                    backgroundColor: getRandomColor(),
+                    showLine: true, // 顯示連線
+                    fill: false
+                }));
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets },
+                    options: {
+                        scales: {
+                            x: { type: 'linear', position: 'bottom' },
+                            y: { type: 'linear' }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching filtered data:', error);
+            }
+        }
+
+        function getRandomColor() {
+            return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+        }
+
         // 每隔 10 秒更新資料
         setInterval(fetchData, 10000);
 
         // 初始化時立即載入資料
-        window.onload = fetchData;
+        window.onload = () => {
+            fetchData();
+            fetchFilteredData();
+        };
     </script>
 </head>
 <body>
     <h1>資料顯示</h1>
     <pre id="output">載入中...</pre>
+    <div id="dashboard-container">
+        <canvas id="dashboard" width="800" height="400"></canvas>
+    </div>
 </body>
 </html>
