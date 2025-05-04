@@ -10,9 +10,9 @@ app.use(express.static(__dirname));
 
 // SSH 配置
 const sshConfig = {
-  host: '192.168.0.5',
-  username: 'your-username',
-  password: 'your-password',
+  host: '192.168.3.14',
+  username: 'root',
+  password: 'root',
 };
 
 // 提供 index.html 作為根路徑的回應
@@ -31,7 +31,7 @@ app.get('/data', (req, res) => {
         return;
       }
 
-      const remoteFilePath = '/home/yolo/output.csv';
+      const remoteFilePath = '/home/root/yolocpp/output.csv';
       const localFilePath = './output.csv';
 
       sftp.fastGet(remoteFilePath, localFilePath, (err) => {
