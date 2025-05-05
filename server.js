@@ -13,59 +13,66 @@ const sshConfig = {
   host: '192.168.3.14',
   username: 'root',
   password: 'root',
+  port: 22,
 };
 
-// 提供 index.html 作為根路徑的回應
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// 緩存檔案內容
+let cachedData = '';
 
-// 修改 /data API 端點，若 SSH 連線失敗則改為讀取本地 output.csv
-app.get('/data', (req, res) => {
+// 定時刷新檔案內容
+const refreshData = () => {
   const conn = new Client();
 
   conn.on('ready', () => {
     conn.sftp((err, sftp) => {
       if (err) {
-        res.status(500).send('SFTP 連接失敗');
+        console.error('SFTP 連接失敗:', err);
         return;
       }
 
-      const remoteFilePath = '/home/root/yolocpp/output.csv';
-      const localFilePath = './output.csv';
+      const remoteFilePath = 'yolocpp/output.csv';
+      const localFilePath = 'output.csv';
 
       sftp.fastGet(remoteFilePath, localFilePath, (err) => {
         if (err) {
-          res.status(500).send('檔案下載失敗');
+          console.error('檔案下載失敗:', err);
           return;
         }
 
         // 讀取檔案內容
         fs.readFile(localFilePath, 'utf8', (err, data) => {
           if (err) {
-            res.status(500).send('檔案讀取失敗');
+            console.error('檔案讀取失敗:', err);
             return;
           }
 
-          res.send(data);
+          cachedData = data;
+          console.log('檔案已更新');
         });
       });
     });
   }).connect(sshConfig);
 
   conn.on('error', (err) => {
-    console.error('SSH 連接失敗，改為讀取本地檔案:', err);
-    const localFilePath = './output.csv';
-
-    fs.readFile(localFilePath, 'utf8', (err, data) => {
-      if (err) {
-        res.status(500).send('本地檔案讀取失敗');
-        return;
-      }
-
-      res.send(data);
-    });
+    console.error('SSH 連接失敗:', err);
   });
+};
+
+// 每秒刷新一次
+setInterval(refreshData, 1000);
+
+// 提供 index.html 作為根路徑的回應
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 修改 /data API 端點，返回緩存的檔案內容
+app.get('/data', (req, res) => {
+  if (cachedData) {
+    res.send(cachedData);
+  } else {
+    res.status(500).send('尚無可用的檔案資料');
+  }
 });
 
 // 在 /data API 中過濾最後 5 秒的資料
