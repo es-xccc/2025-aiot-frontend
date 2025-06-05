@@ -28,10 +28,9 @@ const refreshData = () => {
       if (err) {
         console.error('SFTP 連接失敗:', err);
         return;
-      }
-
-      const remoteFilePath = 'yolocpp/output.csv';
+      }      const remoteFilePath = 'yolocpp/output.csv';
       const localFilePath = 'output.csv';
+      const outputFilePath = './output/output.csv'; // 額外儲存到輸出目錄
 
       sftp.fastGet(remoteFilePath, localFilePath, (err) => {
         if (err) {
@@ -47,6 +46,16 @@ const refreshData = () => {
           }
 
           cachedData = data;
+          
+          // 同時將檔案複製到輸出目錄（用於 volume mounting）
+          fs.copyFile(localFilePath, outputFilePath, (err) => {
+            if (err) {
+              console.error('檔案複製到輸出目錄失敗:', err);
+            } else {
+              console.log('檔案已複製到輸出目錄');
+            }
+          });
+          
           console.log('檔案已更新');
         });
       });

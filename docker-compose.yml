@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  aiot-frontend:
+    container_name: 2025-aiot-frontend
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # 將容器內的 /app/output 目錄掛載到外部的 ./output 目錄
+      - ./output:/app/output
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

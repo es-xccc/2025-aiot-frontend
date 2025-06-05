@@ -7,68 +7,138 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f9;
+            background-color: #f0f2f5; /* Softer background */
             color: #333;
+            line-height: 1.6;
         }
 
         header {
-            background-color: #4CAF50;
+            background: linear-gradient(90deg, #4CAF50, #388E3C); /* Green gradient */
             color: white;
-            padding: 1rem 0;
+            padding: 1.5rem 1rem;
             text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem; /* Slightly larger title */
+            font-weight: 600;
         }
 
         main {
-            padding: 2rem;
+            padding: 2rem 1rem; /* Responsive padding */
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 2rem auto; /* Centering and spacing */
         }
 
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-            position: relative; /* 改為相對定位，避免擋住圖表 */
-            bottom: 0;
-            width: 100%;
-        }
-
-        #output {
+        section {
             background: #fff;
-            border: 1px solid #ddd;
-            padding: 1rem;
-            border-radius: 5px;
+            border: 1px solid #e0e0e0; /* Softer border */
+            padding: 1.5rem 2rem;
+            border-radius: 8px; /* Rounded corners */
             margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer shadow */
+        }
+
+        section h2 {
+            color: #2E7D32; /* Darker green for section titles */
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            border-bottom: 2px solid #66BB6A; /* Lighter green accent line */
+            padding-bottom: 0.75rem;
+        }
+
+        pre#output {
+            background: #e9ecef; /* Light gray for pre background */
+            border: 1px solid #ced4da;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem; /* Consistent margin */
             overflow-x: auto;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap; /* Allow text to wrap */
+            word-wrap: break-word;
         }
 
         #dashboard-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .canvas-wrapper {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
+            gap: 1.5rem; /* Space between charts */
         }
 
-        #dashboard-container canvas {
-            flex: 0 0 48%; /* 每個圖表占據父容器的48%寬度 */
-            margin-bottom: 1rem;
-        }
+        /* --- MODIFIED CSS START --- */
 
+        /* General canvas styling */
         canvas {
             display: block;
             max-width: 100%;
-            height: auto;
+            /* height: auto !important; -- REMOVED this line, or at least !important */
+            /* Chart.js with maintainAspectRatio: false will use container dimensions */
+        }
+
+        /* Styling for canvas elements within the wrapper */
+        .canvas-wrapper canvas {
+            flex: 1 1 45%; /* Allow charts to grow/shrink, aiming for two columns if space */
+            min-width: 300px; /* Prevent charts from becoming too small */
+            max-width: 100%; /* Ensure it doesn't overflow its allocated flex space */
+            height: 400px; /* <<<< ADDED EXPLICIT HEIGHT */
+            /* Styles previously under #dashboard-container canvas, #machine-status-container canvas merged here */
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fdfdfd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* Specific rule for single chart in machine-status-container to take full width */
+        #machine-status-container .canvas-wrapper canvas {
+             flex-basis: 100%; /* Takes full width of .canvas-wrapper */
+             /* It will inherit height: 400px from the rule above */
+        }
+
+        /* --- MODIFIED CSS END --- */
+
+        footer {
+            background-color: #343a40; /* Dark footer */
+            color: #f8f9fa;
+            text-align: center;
+            padding: 1.5rem 1rem;
+            margin-top: 2rem; /* Space above footer */
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+            section {
+                padding: 1rem 1.5rem;
+            }
+            section h2 {
+                font-size: 1.5rem;
+            }
+            header h1 {
+                font-size: 1.75rem;
+            }
+            .canvas-wrapper canvas {
+                flex-basis: 100%; /* Stack charts on smaller screens */
+                /* The height: 400px will still apply, adjust if needed for mobile */
+            }
         }
     </style>
     <script>
@@ -89,7 +159,12 @@
                 const data = await response.json();
 
                 const canvas = document.getElementById('dashboard');
+                if (!canvas) return;
                 const ctx = canvas.getContext('2d');
+
+                if (canvas.chartInstance) {
+                    canvas.chartInstance.destroy();
+                }
 
                 const objects = data.reduce((acc, item) => {
                     if (!acc[item.name]) {
@@ -106,22 +181,38 @@
                     label: name,
                     data: objects[name],
                     borderColor: getRandomColor(),
-                    backgroundColor: getRandomColor(),
-                    showLine: true, // 顯示連線
-                    fill: false
+                    backgroundColor: getRandomColor(), 
+                    tension: 0.1, 
+                    fill: false, 
+                    pointRadius: 4,
+                    pointBackgroundColor: 'white',
+                    pointBorderWidth: 2,
                 }));
 
-                new Chart(ctx, {
+                canvas.chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: { datasets },
                     options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Crucial for CSS to control size
                         scales: {
                             x: {
                                 type: 'linear',
-                                position: 'bottom'
+                                position: 'bottom',
+                                grid: { display: false },
+                                title: { display: true, text: 'X Coordinate' }
                             },
                             y: {
-                                type: 'linear'
+                                type: 'linear',
+                                grid: { color: '#e0e0e0', borderDash: [2,3] },
+                                title: { display: true, text: 'Y Coordinate' }
+                            }
+                        },
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
                             }
                         }
                     }
@@ -132,54 +223,58 @@
         }
 
         function getRandomColor() {
-            return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+            const r = Math.floor(Math.random() * 150 + 50); 
+            const g = Math.floor(Math.random() * 150 + 50); 
+            const b = Math.floor(Math.random() * 150 + 50); 
+            return `rgb(${r},${g},${b})`;
         }
 
-        // 初始化機台控制狀態的空白圖表
         function initializeMachineStatusChart() {
-            const ctx = document.getElementById('machine-status').getContext('2d');
-            new Chart(ctx, {
+            const canvas = document.getElementById('machine-status');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (canvas.chartInstance) {
+                canvas.chartInstance.destroy();
+            }
+
+            canvas.chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [], // 暫時無資料
+                    labels: [], 
                     datasets: [{
                         label: '機台控制狀態',
-                        data: [], // 暫時無資料
+                        data: [], 
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        fill: true
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false, // Crucial for CSS to control size
                     plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
+                        legend: { display: true, position: 'top' }
                     },
                     scales: {
                         x: {
-                            title: {
-                                display: true,
-                                text: '時間'
-                            }
+                            title: { display: true, text: '時間' },
+                            grid: { display: false }
                         },
                         y: {
-                            title: {
-                                display: true,
-                                text: '狀態值'
-                            }
+                            title: { display: true, text: '狀態值' },
+                            grid: { color: '#e0e0e0', borderDash: [2,3] }
                         }
                     }
                 }
             });
         }
 
-        // 每隔 10 秒更新資料
         setInterval(fetchData, 10000);
 
-        // 初始化時立即載入資料
         window.onload = () => {
             fetchData();
             fetchFilteredData();
@@ -196,17 +291,23 @@
             <h2>即時資料</h2>
             <pre id="output">載入中...</pre>
         </section>
+
         <section id="dashboard-container">
             <h2>圖表視覺化</h2>
-            <canvas id="dashboard" width="800" height="400"></canvas>
+            <div class="canvas-wrapper">
+                <canvas id="dashboard"></canvas>
+            </div>
         </section>
+
         <section id="machine-status-container">
             <h2>機台控制狀態</h2>
-            <canvas id="machine-status" width="800" height="400"></canvas>
+            <div class="canvas-wrapper">
+                <canvas id="machine-status"></canvas>
+            </div>
         </section>
     </main>
     <footer>
-        <p>&copy; 2025 資料顯示系統</p>
+        <p>© 2025 資料顯示系統</p>
     </footer>
 </body>
 </html>

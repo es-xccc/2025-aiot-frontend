@@ -1,4 +1,15 @@
-# Build, run, and access the container in one command
-docker rm -f aiot-frontend-container; docker build -t aiot-frontend .; docker run -d -p 3000:3000 --name aiot-frontend-container aiot-frontend; docker exec -it aiot-frontend-container /bin/bash
+# AIoT Frontend
+
+## 如何啟動專案
+
+docker-compose up --build -d
 
 http://localhost:3000
+
+## 如何停止 container
+
+docker stop aiot-frontend
+
+## 如何刪除 container
+
+docker rm aiot-frontend
