@@ -8,8 +8,8 @@ http://localhost:3000
 
 ## 如何停止 container
 
-docker stop aiot-frontend
+docker stop 2025-aiot-frontend
 
 ## 如何刪除 container
 
-docker rm aiot-frontend
+docker rm 2025-aiot-frontend
