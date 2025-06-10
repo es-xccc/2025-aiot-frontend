@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   aiot-frontend:
     container_name: 2025-aiot-frontend
