@@ -9,6 +9,7 @@ services:
     volumes:
       # 將容器內的 /app/output 目錄掛載到外部的 ./output 目錄
       - ./output:/app/output
+      - ./src:/app/src
     restart: unless-stopped
     environment:
       - NODE_ENV=production
