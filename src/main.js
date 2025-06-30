@@ -129,6 +129,62 @@ function initializeMachineStatusChart() {
     });
 }
 
+// === 自定義物件控制面板 ===
+const classNames = [
+    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck",
+    "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
+    "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra",
+    "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
+    "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove",
+    "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork",
+    "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+    "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant",
+    "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard",
+    "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book",
+    "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
+];
+
+function renderObjectList() {
+    const list = document.getElementById('objectList');
+    if (!list) return;
+    let html = '';
+    for (let i = 0; i < classNames.length; i += 5) {
+        html += '<div style="display:flex;flex-direction:row;gap:0.5em;margin-bottom:0.5em;">';
+        for (let j = i; j < i + 5 && j < classNames.length; j++) {
+            html += `<div class=\"object-item\" style=\"flex:1;min-width:0;\"><label style=\"width:100%;display:inline-block;\"><input type=\"checkbox\" value=\"${classNames[j]}\"> ${classNames[j]}</label></div>`;
+        }
+        html += '</div>';
+    }
+    list.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderObjectList();
+    const form = document.getElementById('controlForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const checked = Array.from(document.querySelectorAll('#objectList input[type=checkbox]:checked')).map(cb => cb.value);
+            const overlapMode = document.querySelector('input[name="overlapMode"]:checked').value;
+            const result = { objects: checked, overlapMode };
+            try {
+                const res = await fetch('/api/save-control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result)
+                });
+                if (res.ok) {
+                    document.getElementById('resultMsg').textContent = '設定已儲存！';
+                } else {
+                    document.getElementById('resultMsg').textContent = '儲存失敗';
+                }
+            } catch {
+                document.getElementById('resultMsg').textContent = '儲存失敗';
+            }
+        });
+    }
+});
+
 setInterval(fetchData, 10000);
 
 window.onload = () => {

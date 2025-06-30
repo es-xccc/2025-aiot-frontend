@@ -6,6 +6,7 @@ const PORT = 3000;
 
 // 提供靜態檔案服務
 app.use(express.static(__dirname));
+app.use(express.json());
 
 // 緩存檔案內容
 let cachedData = '';
@@ -58,6 +59,18 @@ app.get('/filtered-data', (req, res) => {
       const [time, name, x1, y1, x2, y2] = line.split(',');
       return { time: parseFloat(time), name, x1: parseInt(x1), y1: parseInt(y1), x2: parseInt(x2), y2: parseInt(y2) };
     }));
+  });
+});
+
+// 儲存自定義控制設定 API
+app.post('/api/save-control', (req, res) => {
+  const controlPath = path.join(__dirname, '../output/control.json');
+  fs.writeFile(controlPath, JSON.stringify(req.body, null, 2), (err) => {
+    if (err) {
+      console.error('控制設定儲存失敗:', err);
+      return res.status(500).json({ success: false });
+    }
+    res.json({ success: true });
   });
 });
 

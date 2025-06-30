@@ -24,6 +24,32 @@
             </div>
         </section>
 
+        <!-- 自定義物件控制面板 start -->
+        <section id="custom-control-panel">
+            <div class="container" style="margin-top:2em;">
+                <h2>自定義物件控制面板</h2>
+                <form id="controlForm">
+                    <div>
+                        <label><strong>選擇物件：</strong></label>
+                        <div class="object-list" id="objectList" style="max-height:300px;overflow-y:auto;border:1px solid #eee;padding:1em;border-radius:4px;background:#fafafa;"></div>
+                    </div>
+                    <div style="margin-top:1em;">
+                        <label>
+                            <input type="radio" name="overlapMode" value="overlap" checked> 重疊時發出警報
+                        </label>
+                        <label style="margin-left:2em;">
+                            <input type="radio" name="overlapMode" value="nooverlap"> 不重疊時發出警報
+                        </label>
+                    </div>
+                    <div class="actions" style="margin-top:1.5em;">
+                        <button type="submit">儲存設定</button>
+                    </div>
+                    <div class="result" id="resultMsg" style="margin-top:1em;color:green;"></div>
+                </form>
+            </div>
+        </section>
+        <!-- 自定義物件控制面板 end -->
+
         <section id="machine-status-container">
             <h2>機台控制狀態</h2>
             <div class="canvas-wrapper">

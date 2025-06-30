@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>自定義物件控制面板</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; background: #f7f7f7; }
+        .container { background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px #0001; max-width: 600px; margin: auto; }
+        h2 { margin-top: 0; }
+        .object-list { max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 1em; border-radius: 4px; background: #fafafa; }
+        .object-item { margin-bottom: 0.5em; }
+        .actions { margin-top: 1.5em; }
+        .result { margin-top: 1em; color: green; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>自定義物件控制面板</h2>
+    <form id="controlForm">
+        <div>
+            <label><strong>選擇物件：</strong></label>
+            <div class="object-list" id="objectList"></div>
+        </div>
+        <div style="margin-top:1em;">
+            <label>
+                <input type="checkbox" id="allowOverlap"> 允許重疊
+            </label>
+        </div>
+        <div class="actions">
+            <button type="submit">儲存設定</button>
+        </div>
+        <div class="result" id="resultMsg"></div>
+    </form>
+</div>
+<script src="control.js"></script>
+</body>
+</html>

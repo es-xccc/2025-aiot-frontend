@@ -1,0 +1,9 @@
+{
+  "objects": [
+    "tv",
+    "laptop",
+    "remote",
+    "keyboard"
+  ],
+  "overlapMode": "overlap"
+}
