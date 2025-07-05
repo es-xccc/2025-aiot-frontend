@@ -8,6 +8,11 @@ const PORT = 3000;
 app.use(express.static(__dirname));
 app.use(express.json());
 
+// 提供 control_result.csv 靜態檔案
+app.use('/control_result.csv', (req, res) => {
+  res.sendFile(path.join(__dirname, '../output/control_result.csv'));
+});
+
 // 緩存檔案內容
 let cachedData = '';
 

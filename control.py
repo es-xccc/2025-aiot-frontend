@@ -9,6 +9,8 @@ control = {}
 selected_objects = set()
 overlap_mode = 'overlap'
 
+CONTROL_RESULT_PATH = 'output/control_result.csv'
+
 def load_control():
     global control, selected_objects, overlap_mode, last_control_mtime
     try:
@@ -21,6 +23,11 @@ def load_control():
             last_control_mtime = mtime
     except Exception as e:
         print(f"[警告] control.json 載入失敗: {e}")
+
+def write_control_result(time_val, alert):
+    state = 1 if alert else 0
+    with open(CONTROL_RESULT_PATH, 'a', encoding='utf-8', newline='') as f:
+        f.write(f"{time_val:.4f},{state}\n")
 
 def check_alert():
     global last_alert_time
@@ -62,6 +69,7 @@ def check_alert():
     if window_records:
         if last_alert_time != last_time:
             print(f"time={last_time:.4f}, alert={alert}")
+            write_control_result(last_time, alert)
             last_alert_time = last_time
     else:
         print("no data in window")

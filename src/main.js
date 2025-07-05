@@ -78,6 +78,66 @@ async function fetchFilteredData() {
     }
 }
 
+async function fetchControlResult() {
+    try {
+        const response = await fetch('/control_result.csv');
+        if (!response.ok) return [];
+        const text = await response.text();
+        // 解析CSV: time,state\n
+        return text.trim().split('\n').map(line => {
+            const [time, state] = line.split(',');
+            return { time: parseFloat(time), state: parseInt(state) };
+        });
+    } catch {
+        return [];
+    }
+}
+
+async function updateMachineStatusChart() {
+    const data = await fetchControlResult();
+    const canvas = document.getElementById('machine-status');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (canvas.chartInstance) {
+        canvas.chartInstance.destroy();
+    }
+    canvas.chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.time),
+            datasets: [{
+                label: '機台控制狀態',
+                data: data.map(d => d.state),
+                borderColor: 'red',
+                backgroundColor: 'rgba(255,0,0,0.05)',
+                fill: false,
+                tension: 0,
+                stepped: true,
+                pointRadius: 2,
+                pointBackgroundColor: 'red',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'top' }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: '時間' },
+                    grid: { display: false }
+                },
+                y: {
+                    title: { display: true, text: '狀態' },
+                    min: 0, max: 1, ticks: { stepSize: 1 },
+                    grid: { color: '#e0e0e0', borderDash: [2,3] }
+                }
+            }
+        }
+    });
+}
+
 function getRandomColor() {
     const r = Math.floor(Math.random() * 150 + 50);
     const g = Math.floor(Math.random() * 150 + 50);
@@ -186,9 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 setInterval(fetchData, 10000);
-
 window.onload = () => {
     fetchData();
     fetchFilteredData();
-    initializeMachineStatusChart();
+    updateMachineStatusChart();
 };
+setInterval(updateMachineStatusChart, 2000);
